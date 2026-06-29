@@ -12423,3 +12423,11 @@ ER_RESULT_CUT_BY_LIMIT
         eng "Result was cut by %s) because of %s limit"
 ER_CUT_VALUES_WHILE_PROCESSING
         eng "Some values were cut while processing %s). Increase %s if you want to avoid the cut"
+WARN_VERS_WRONG_STARTS
+        chi "%sQ: STARTS 时间戳 %s 晚于最早历史日期 %s，已被设置为 %s"
+        eng "%sQ: STARTS timestamp %s is above earliest history date %s and was set to %s"
+        spa "%sQ: la marca de tiempo STARTS %s es posterior a la fecha histórica más temprana %s y se estableció en %s"
+WARN_VERS_SLOW_ROW_END
+        chi "%sQ: 未找到 ROW END 索引，正在使用慢速扫描；请添加以 ROW END 列开头的索引（升序，非 DESC）以避免"
+        eng "%sQ: ROW END index not found, using slow scan; add an index starting with the ROW END column (ascending, not DESC) to avoid it"
+        spa "%sQ: no se encontró el índice ROW END, usando escaneo lento; agregue un índice que comience por la columna ROW END (ascendente, no DESC) para evitarlo"
