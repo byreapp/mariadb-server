@@ -288,5 +288,6 @@ struct st_vio
   int shutdown_flag;
   void *tp_ctx; /* threadpool context */
 #endif
+  size_t (*peek)(Vio *, uchar *, size_t);
 };
 #endif /* vio_violite_h_ */
