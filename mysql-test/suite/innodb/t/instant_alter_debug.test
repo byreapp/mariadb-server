@@ -673,3 +673,34 @@ DROP TABLE t1;
 
 SET GLOBAL innodb_stats_persistent = @save_stats_persistent;
 --echo # End of 10.6 tests
+
+--echo #
+--echo #  MDEV-41494 Server aborts on crash recovery after an
+--echo #   interrupted instant ALTER TABLE reorders/drops columns
+--echo # 
+CREATE TABLE t1 (a INT PRIMARY KEY, b INT, c INT) ENGINE=InnoDB;
+ALTER TABLE t1 MODIFY c INT FIRST, ALGORITHM=INSTANT;
+--connect (con1,localhost,root)
+SET DEBUG_SYNC='after_row_upd_clust SIGNAL s WAIT_FOR go EXECUTE 4';
+--send ALTER TABLE t1 MODIFY b INT FIRST, ALGORITHM=INSTANT
+
+--connection default
+--let $n= 3
+while ($n)
+{
+  SET DEBUG_SYNC='now WAIT_FOR s';
+  SET DEBUG_SYNC='now SIGNAL go';
+  --dec $n
+}
+
+SET DEBUG_SYNC='now WAIT_FOR s';
+FLUSH ENGINE LOGS;
+disconnect con1;
+
+let $restart_parameters= --innodb-force-recovery=4
+let $shutdown_timeout=0;
+--source include/restart_mysqld.inc
+SELECT * FROM t1;
+--let $restart_parameters=
+--source include/restart_mysqld.inc
+DROP TABLE t1;
