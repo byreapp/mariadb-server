@@ -5707,6 +5707,23 @@ Item *Item_cond::deep_copy(THD *thd) const
 }
 
 
+Item *Item_cond::pushdown_copy(THD *thd) const
+{
+  Item_cond *copy= (Item_cond *) surface_copy_with_checks(thd);
+  if (!copy)
+    return nullptr;
+  copy->list.empty();
+
+  for (const Item &item : list)
+  {
+    Item *arg_copy= item.pushdown_copy_with_checks(thd);
+    if (!arg_copy || copy->list.push_back(arg_copy, thd->mem_root))
+      return nullptr;
+  }
+  return copy;
+}
+
+
 Item *Item_cond::same_select_copy(THD *thd) const
 {
   Item_cond *copy= (Item_cond *) surface_copy_with_checks(thd);
@@ -8085,9 +8102,9 @@ bool Item_equal::create_pushable_equalities(THD *thd,
   if (right_item)
   {
     Item_func_eq *eq= 0;
-    Item *left_item_clone= left_item->deep_copy_with_checks(thd);
+    Item *left_item_clone= left_item->pushdown_copy_with_checks(thd);
     Item *right_item_clone= !clone_const ?
-                            right_item : right_item->deep_copy_with_checks(thd);
+                            right_item : right_item->pushdown_copy_with_checks(thd);
     if (!left_item_clone || !right_item_clone)
       return true;
     eq= new (thd->mem_root) Item_func_eq(thd,
@@ -8114,8 +8131,8 @@ bool Item_equal::create_pushable_equalities(THD *thd,
     if (checker && !((item->*checker) (arg)))
       continue;
     Item_func_eq *eq= 0;
-    Item *left_item_clone= left_item->deep_copy_with_checks(thd);
-    Item *right_item_clone= item->deep_copy_with_checks(thd);
+    Item *left_item_clone= left_item->pushdown_copy_with_checks(thd);
+    Item *right_item_clone= item->pushdown_copy_with_checks(thd);
     if (!(left_item_clone && right_item_clone))
       return true;
     left_item_clone->set_item_equal(NULL);
